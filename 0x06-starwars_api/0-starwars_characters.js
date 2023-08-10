@@ -1,39 +1,29 @@
-const axios = require('axios');
+#!/usr/bin/node
 
-function getMovieCharacters(movieId) {
-  const url = `https://swapi.dev/api/films/${movieId}/`;
-  
-  return axios.get(url)
-    .then(response => {
-      const characterUrls = response.data.characters;
-      const characterPromises = characterUrls.map(characterUrl => axios.get(characterUrl));
-      
-      return Promise.all(characterPromises)
-        .then(characterResponses => {
-          const characterNames = characterResponses.map(characterResponse => characterResponse.data.name);
-          return characterNames;
-        })
-        .catch(error => {
-          console.error("Error fetching character data:", error);
-          return [];
-        });
-    })
-    .catch(error => {
-      console.error("Error fetching movie data:", error);
-      return [];
-    });
-}
-
-if (process.argv.length !== 3) {
-  console.error("Usage: node 0-starwars_characters.js <movie_id>");
-  process.exit(1);
-}
+const request = require('request');
 
 const movieId = process.argv[2];
-getMovieCharacters(movieId)
-  .then(characterNames => {
-    characterNames.forEach(name => {
-      console.log(name);
-    });
-  });
+const movieUrl = `https://swapi-api.alx-tools.com/api/films/${movieId}`;
+let characters = [];
 
+request(movieUrl, (error, response, body) => {
+  if (error) {
+    console.log(error);
+  } else {
+    characters = JSON.parse(body).characters;
+    getCharacter(0);
+  }
+});
+
+const getCharacter = (index) => {
+  if (index === characters.length) return;
+  request(characters[index], (error, response, body) => {
+    if (error) {
+      console.log(error);
+    } else {
+      const name = JSON.parse(body).name;
+      console.log(name);
+      getCharacter(index + 1);
+    }
+  });
+};
